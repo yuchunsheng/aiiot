@@ -25,6 +25,7 @@ along with BreezyArduCAM.  If not, see <http://www.gnu.org/licenses/>.
 #define CyuArduCAM_H
 
 #include <Arduino.h>
+#include <SPI.h>
 
 //only for Arduino Nano 33
 #define regtype volatile uint32_t
@@ -53,7 +54,7 @@ class ArduCAM_Mini {
 
     protected:
 
-        ArduCAM_Mini(uint8_t sensor_addr, uint32_t mfs, uint8_t cs, class ArduCAM_FrameGrabber * fg);
+        ArduCAM_Mini(uint8_t sensor_addr, uint32_t mfs, uint8_t cs, class ArduCAM_FrameGrabber * fg, SPISettings spi_settings);
 
         void spiCheck(void);
 
@@ -99,6 +100,8 @@ class ArduCAM_Mini {
         bool capturing;
         bool starting;
 
+        SPISettings m_spisettings;
+
         virtual void transferQvgaByte(void) = 0;
 
     private:
@@ -121,7 +124,7 @@ class ArduCAM_Mini_2MP : public ArduCAM_Mini {
          * @param cs pin for Chip Select signal
          * @param fg pointer to FrameGrabber object
          */
-        ArduCAM_Mini_2MP(int cs, class ArduCAM_FrameGrabber * fg);
+        ArduCAM_Mini_2MP(int cs, class ArduCAM_FrameGrabber * fg, SPISettings spi_settings);
 
         /**
          * Begins capture in QVGA (raw) mode.
@@ -193,7 +196,7 @@ class ArduCAM_Mini_2MP : public ArduCAM_Mini {
 class ArduCAM_FrameGrabber {
 
     friend class ArduCAM_Mini;
-    friend class ArduCAM_Mini_5MP;
+    friend class ArduCAM_Mini_2MP;
 
     protected:
 

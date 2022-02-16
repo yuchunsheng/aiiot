@@ -79,7 +79,7 @@ along with BreezyArduCAM.  If not, see <http://www.gnu.org/licenses/>.
 #define ARDUCHIP_TIM       		0x03    // Timing control
 
 
-ArduCAM_Mini::ArduCAM_Mini(uint8_t addr, uint32_t mfs, uint8_t cs, class ArduCAM_FrameGrabber * fg)
+ArduCAM_Mini::ArduCAM_Mini(uint8_t addr, uint32_t mfs, uint8_t cs, class ArduCAM_FrameGrabber * fg, SPISettings spi_settings)
 {
     B_CS = cs;   // for NRF52840_XXAA
 
@@ -90,6 +90,7 @@ ArduCAM_Mini::ArduCAM_Mini(uint8_t addr, uint32_t mfs, uint8_t cs, class ArduCAM
     max_fifo_size = mfs;
 
     grabber = fg;
+    m_spisettings = spi_settings;
 }
 
 void ArduCAM_Mini::capture(void)
@@ -146,7 +147,7 @@ void ArduCAM_Mini::capture(void)
 }
 
 
-ArduCAM_Mini_2MP::ArduCAM_Mini_2MP(int cs, class ArduCAM_FrameGrabber * fg) : ArduCAM_Mini(0x60, 0x5FFFF, cs, fg)
+ArduCAM_Mini_2MP::ArduCAM_Mini_2MP(int cs, class ArduCAM_FrameGrabber * fg, SPISettings  spi_settings) : ArduCAM_Mini(0x60, 0x5FFFF, cs, fg, spi_settings)
 {
     usingJpeg = false;
 }
@@ -162,7 +163,9 @@ void ArduCAM_Mini_2MP::beginQvga(uint8_t _scaledown, bool _grayscale)
 
 void ArduCAM_Mini_2MP::transferQvgaByte(void)
 {
+    SPI.beginTransaction(m_spisettings);
     SPI.transfer(0x00);
+    SPI.endTransaction();
 }
 
 void ArduCAM_Mini_2MP::beginJpeg160x120(void)
@@ -218,7 +221,9 @@ void ArduCAM_Mini::grabJpegFrame(uint32_t length)
 {
     uint8_t temp = 0xff, temp_last = 0;
     bool is_header = false;
-
+    
+    SPI.beginTransaction(m_spisettings);
+    
     while (--length) {
         temp_last = temp;
         temp =  SPI.transfer(0x00);
@@ -235,6 +240,7 @@ void ArduCAM_Mini::grabJpegFrame(uint32_t length)
         delayMicroseconds(15);
     }
 
+    SPI.endTransaction();
     // supports continuous capture
     starting = true;
 }
@@ -344,7 +350,9 @@ uint32_t ArduCAM_Mini::read_fifo_length(void)
 
 void ArduCAM_Mini::set_fifo_burst()
 {
-    SPI.transfer(BURST_FIFO_READ);
+  SPI.beginTransaction(m_spisettings);
+  SPI.transfer(BURST_FIFO_READ);
+  SPI.endTransaction();
 }
 
 void ArduCAM_Mini::csHigh(void)
@@ -402,8 +410,12 @@ uint8_t ArduCAM_Mini::get_bit(uint8_t addr, uint8_t bit)
 uint8_t ArduCAM_Mini::bus_write(int address,int value)
 {	
     cbi(P_CS, B_CS);
+    SPI.beginTransaction(m_spisettings);
+    
     SPI.transfer(address);
     SPI.transfer(value);
+
+    SPI.endTransaction();
     sbi(P_CS, B_CS);
     return 1;
 }
@@ -412,8 +424,10 @@ uint8_t ArduCAM_Mini:: bus_read(int address)
 {
     uint8_t value;
     cbi(P_CS, B_CS);
+    SPI.beginTransaction(m_spisettings);
     SPI.transfer(address);
     value = SPI.transfer(0x00);
+    SPI.endTransaction();
     // take the SS pin high to de-select the chip:
     sbi(P_CS, B_CS);
     return value;
