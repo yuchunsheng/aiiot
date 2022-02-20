@@ -4,7 +4,7 @@ import scipy.io.wavfile
 
 try:
     with open('c:\\temp\\audio_raw', "rb") as f:
-        input_bytearray= np.fromfile(f,dtype=np.dtype('>i2'))  # big endian >i2
+        input_bytearray= np.fromfile(f,dtype=np.dtype('<i2'))  # big endian >i2
 
     print(input_bytearray.shape)
     print(input_bytearray.dtype)

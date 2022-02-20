@@ -19,10 +19,10 @@ while (1):
             print(len(in_data), type(in_data))
             if ((in_seconds > 0) and (len(in_data)>1000)):
                 if(first_time):
-                    input_bytes=np.frombuffer(in_data, dtype=np.dtype('>i2')) 
+                    input_bytes=np.frombuffer(in_data, dtype=np.dtype('<i2')) 
                     first_time = False
                 else:
-                    input_2_bytes = np.frombuffer(in_data, dtype=np.dtype('>i2'))
+                    input_2_bytes = np.frombuffer(in_data, dtype=np.dtype('<i2'))
                     input_bytes = np.append(input_bytes, input_2_bytes)
                 print(input_bytes.shape)
                 print(input_bytes.dtype)
